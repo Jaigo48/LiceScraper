@@ -29,7 +29,7 @@ def index():
         .section { border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-top: 20px; }
       </style>
     </head>
-    <body>
+       <body>
       <h1>Lead Enrichment Tool</h1>
 
       <div class="section">
@@ -52,7 +52,22 @@ def index():
         </form>
       </div>
 
-    </body>
+      <div class="section">
+        <p>A "new location" means the business has never held a licence at that address before, they are opening from scratch with no existing POS system. The opening date tells you when to reach out.</p>
+      </div>
+
+            <div class="section">
+        <h2>Where This Can Go</h2>
+        <p>This tool is built to expand as your pipeline grows:</p>
+        <p>Auto-generated outreach emails for each hot lead, ready to copy and send.</p>
+        <p>Contact info enrichment: pull email and phone from the Finnish business registry (PRH) automatically.</p>
+        <p>Weekly alerts: get notified the moment a new hot lead appears in the register.</p>
+        <p>Regional filtering: narrow results to specific municipalities or regions.</p>
+        <p>CRM sync: push new leads directly into Pipedrive, Salesforce, or HubSpot.</p>
+        <p>Lead tracking: mark leads as contacted, replied, or closed so you never follow up twice.</p>
+      </div>   
+
+    </body>   
     </html>
     """
 
