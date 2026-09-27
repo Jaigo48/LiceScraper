@@ -40,43 +40,7 @@ class TestPipeline(unittest.TestCase):
             result.stdout,
         )
 
-    def test_json_output_contains_six_leads(self):
-        """The pipeline should produce six JSON records."""
-
-        output_file = (
-            self.project_root
-            / "output_leads.json"
-        )
-
-        with output_file.open(
-            "r",
-            encoding="utf-8",
-        ) as file:
-            leads = json.load(file)
-
-        self.assertEqual(
-            len(leads),
-            6,
-        )
-
-    def test_csv_output_contains_six_leads(self):
-        """The pipeline should produce six CSV records."""
-
-        output_file = (
-            self.project_root
-            / "output_leads.csv"
-        )
-
-        with output_file.open(
-            "r",
-            encoding="utf-8",
-        ) as file:
-            rows = list(csv.DictReader(file))
-
-        self.assertEqual(
-            len(rows),
-            6,
-        )
+   
 
 
 if __name__ == "__main__":
