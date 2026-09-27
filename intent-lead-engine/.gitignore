@@ -1,6 +1,0 @@
-__pycache__/
-*.pyc
-.venv/
-output_leads.csv
-output_leads.json
-finland/luparekisteri-voimassaolevat-alkoholiluvat.xlsx   

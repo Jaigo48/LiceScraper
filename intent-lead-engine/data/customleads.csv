@@ -1,3 +1,0 @@
-post_id,source,author,title,body,url,street_address,postal_code,municipality
-lead-001,custom_csv,helsinki_cafe_owner,Switching our POS system ahead of spring,Our current credit card processing fees are way too high and the terminal keeps freezing.,https://example.com/1,Aleksanterinkatu 10,00100,Helsinki
-lead-002,custom_xlsx,espoo_restaurateur,Looking for better POS reporting options,We need better analytics and lower transaction fees for our second location.,https://example.com/2,Itätuulenkuja 1,02100,Espoo
