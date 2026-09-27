@@ -1,13 +1,8 @@
+cat > finland/importer.py << 'ENDOFFILE'
 #!/usr/bin/env python3
 
 """
 Finnish alcohol licence data importer.
-
-Phase 1:
-- Read the official LVV XLSX file.
-- Use the anniskelu sheet only.
-- Normalize the Finnish column names.
-- Do not modify the existing lead pipeline.
 """
 
 from __future__ import annotations
@@ -16,13 +11,7 @@ from pathlib import Path
 
 import pandas as pd
 
-
-DEFAULT_FILE = (
-    Path.home()
-    / "Downloads"
-    / "luparekisteri-voimassaolevat-alkoholiluvat.xlsx"
-)
-
+DEFAULT_FILE = Path(__file__).resolve().parent / "luparekisteri-voimassaolevat-alkoholiluvat.xlsx"
 
 SHEET_NAME = "anniskelu"
 
@@ -43,8 +32,6 @@ COLUMN_MAP = {
 def load_finland_licences(
     path: Path = DEFAULT_FILE,
 ) -> pd.DataFrame:
-    """Load and normalize current Finnish alcohol-serving licences."""
-
     if not path.exists():
         raise FileNotFoundError(
             f"Finnish licence file not found: {path}"
@@ -73,7 +60,6 @@ def load_finland_licences(
         .str.strip()
     )
 
-
     df["licence_start_date"] = pd.to_datetime(
         df["licence_start_date"],
         format="%d.%m.%Y",
@@ -92,8 +78,6 @@ def load_finland_licences(
 def filter_active_licences(
     df: pd.DataFrame,
 ) -> pd.DataFrame:
-    """Return licences that are active today."""
-
     today = pd.Timestamp.today().normalize()
 
     active = (
@@ -110,8 +94,6 @@ def filter_active_licences(
 def add_location_key(
     df: pd.DataFrame,
 ) -> pd.DataFrame:
-    """Add a normalized physical-location key."""
-
     df = df.copy()
 
     key_columns = [
@@ -139,40 +121,26 @@ def add_location_key(
 
     return df
 
+
 def detect_new_locations(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Detect physical locations whose first recorded licence
-    starts in 2026.
-
-    Returns one record per physical location.
-    """
-
     df = df.copy()
 
     today = pd.Timestamp.today().normalize()
 
-    # Find the earliest licence start date recorded
-    # for each physical location.
     location_first_start = (
         df.groupby("location_key")["licence_start_date"]
         .min()
     )
 
-    # Attach the earliest known licence date to each record.
     df["location_first_start"] = (
         df["location_key"].map(location_first_start)
     )
 
-    # A record represents a new location when its licence
-    # start date is the earliest recorded date for that location.
     new_locations = df[
         (df["licence_start_date"] == df["location_first_start"])
         & (df["location_first_start"].dt.year == 2026)
     ].copy()
 
-
-    # If multiple licence records have the same first date
-    # for a location, keep only one record.
     new_locations = (
         new_locations
         .sort_values(
@@ -185,8 +153,6 @@ def detect_new_locations(df: pd.DataFrame) -> pd.DataFrame:
         .copy()
     )
 
-    # Determine whether the new location is already active
-    # or has a future licence start date.
     new_locations["signal_type"] = "NEW_LOCATION_ACTIVE"
 
     new_locations.loc[
@@ -212,8 +178,6 @@ def detect_new_locations(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def main() -> None:
-    """Run a read-only inspection of new-location signals."""
-
     df = load_finland_licences()
     df = add_location_key(df)
 
@@ -278,4 +242,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
+ENDOFFILE   
