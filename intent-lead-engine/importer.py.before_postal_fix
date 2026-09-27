@@ -1,0 +1,280 @@
+#!/usr/bin/env python3
+
+"""
+Finnish alcohol licence data importer.
+
+Phase 1:
+- Read the official LVV XLSX file.
+- Use the anniskelu sheet only.
+- Normalize the Finnish column names.
+- Do not modify the existing lead pipeline.
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+import pandas as pd
+
+
+DEFAULT_FILE = (
+    Path.home()
+    / "Downloads"
+    / "luparekisteri-voimassaolevat-alkoholiluvat.xlsx"
+)
+
+
+SHEET_NAME = "anniskelu"
+
+COLUMN_MAP = {
+    "asiakastunnus": "operator_id",
+    "lupanumero": "licence_number",
+    "nimi": "location_name",
+    "katuosoite": "street_address",
+    "postinumero": "postal_code",
+    "postitoimipaikka": "postal_locality",
+    "kunta": "municipality",
+    "asiakkaan-nimi": "operator_name",
+    "alkamispaivamaara": "licence_start_date",
+    "paattamispaivamaara": "licence_end_date",
+}
+
+
+def load_finland_licences(
+    path: Path = DEFAULT_FILE,
+) -> pd.DataFrame:
+    """Load and normalize current Finnish alcohol-serving licences."""
+
+    if not path.exists():
+        raise FileNotFoundError(
+            f"Finnish licence file not found: {path}"
+        )
+
+    df = pd.read_excel(
+        path,
+        sheet_name=SHEET_NAME,
+    )
+
+    missing = set(COLUMN_MAP) - set(df.columns)
+
+    if missing:
+        raise ValueError(
+            "Finnish dataset is missing expected columns: "
+            + ", ".join(sorted(missing))
+        )
+
+    df = df[list(COLUMN_MAP)].rename(columns=COLUMN_MAP)
+
+    df["postal_code"] = (
+        pd.to_numeric(df["postal_code"], errors="coerce")
+        .astype("Int64")
+        .astype(str)
+        .str.zfill(5)
+    )
+
+
+    df["licence_start_date"] = pd.to_datetime(
+        df["licence_start_date"],
+        format="%d.%m.%Y",
+        errors="coerce",
+    )
+
+    df["licence_end_date"] = pd.to_datetime(
+        df["licence_end_date"],
+        format="%d.%m.%Y",
+        errors="coerce",
+    )
+
+    return df
+
+
+def filter_active_licences(
+    df: pd.DataFrame,
+) -> pd.DataFrame:
+    """Return licences that are active today."""
+
+    today = pd.Timestamp.today().normalize()
+
+    active = (
+        (df["licence_start_date"] <= today)
+        & (
+            df["licence_end_date"].isna()
+            | (df["licence_end_date"] >= today)
+        )
+    )
+
+    return df.loc[active].copy()
+
+
+def add_location_key(
+    df: pd.DataFrame,
+) -> pd.DataFrame:
+    """Add a normalized physical-location key."""
+
+    df = df.copy()
+
+    key_columns = [
+        "street_address",
+        "postal_code",
+        "municipality",
+    ]
+
+    for column in key_columns:
+        df[column] = (
+            df[column]
+            .fillna("")
+            .astype(str)
+            .str.strip()
+            .str.upper()
+        )
+
+    df["location_key"] = (
+        df["street_address"]
+        + "|"
+        + df["postal_code"]
+        + "|"
+        + df["municipality"]
+    )
+
+    return df
+
+def detect_new_locations(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Detect physical locations whose first recorded licence
+    starts in 2026.
+
+    Returns one record per physical location.
+    """
+
+    df = df.copy()
+
+    today = pd.Timestamp.today().normalize()
+
+    # Find the earliest licence start date recorded
+    # for each physical location.
+    location_first_start = (
+        df.groupby("location_key")["licence_start_date"]
+        .min()
+    )
+
+    # Attach the earliest known licence date to each record.
+    df["location_first_start"] = (
+        df["location_key"].map(location_first_start)
+    )
+
+    # A record represents a new location when its licence
+    # start date is the earliest recorded date for that location.
+    new_locations = df[
+        (df["licence_start_date"] == df["location_first_start"])
+        & (df["location_first_start"].dt.year == 2026)
+    ].copy()
+
+
+    # If multiple licence records have the same first date
+    # for a location, keep only one record.
+    new_locations = (
+        new_locations
+        .sort_values(
+            ["location_key", "licence_start_date", "licence_number"]
+        )
+        .drop_duplicates(
+            subset=["location_key"],
+            keep="first",
+        )
+        .copy()
+    )
+
+    # Determine whether the new location is already active
+    # or has a future licence start date.
+    new_locations["signal_type"] = "NEW_LOCATION_ACTIVE"
+
+    new_locations.loc[
+        new_locations["licence_start_date"] > today,
+        "signal_type",
+    ] = "NEW_LOCATION_UPCOMING"
+
+    new_locations["signal_type"] = pd.Categorical(
+        new_locations["signal_type"],
+        categories=[
+            "NEW_LOCATION_ACTIVE",
+            "NEW_LOCATION_UPCOMING",
+        ],
+        ordered=True,
+    )
+
+    new_locations = new_locations.sort_values(
+        ["signal_type", "licence_start_date", "location_name"],
+        na_position="last",
+    ).copy()
+
+    return new_locations
+
+
+def main() -> None:
+    """Run a read-only inspection of new-location signals."""
+
+    df = load_finland_licences()
+    df = add_location_key(df)
+
+    new_locations = detect_new_locations(df)
+
+    print("Finland Alcohol Licence Importer")
+    print("=================================")
+    print(f"Source file : {DEFAULT_FILE}")
+    print(f"Sheet       : {SHEET_NAME}")
+    print(f"Records     : {len(df)}")
+    print(f"Unique locations: {df['location_key'].nunique()}")
+
+    print()
+    print("NEW LOCATION SIGNAL")
+    print("===================")
+
+    print(
+        f"New-location records: "
+        f"{len(new_locations)}"
+    )
+
+    print(
+        f"New locations already started: "
+        f"{(new_locations['signal_type'] == 'NEW_LOCATION_ACTIVE').sum()}"
+    )
+
+    print(
+        f"New locations upcoming: "
+        f"{(new_locations['signal_type'] == 'NEW_LOCATION_UPCOMING').sum()}"
+    )
+
+    print()
+    print("NEW LOCATION SIGNALS")
+    print("====================")
+
+    output_columns = [
+        "signal_type",
+        "location_name",
+        "street_address",
+        "postal_code",
+        "postal_locality",
+        "municipality",
+        "operator_id",
+        "operator_name",
+        "licence_number",
+        "licence_start_date",
+        "location_first_start",
+    ]
+
+    print(
+        new_locations[
+            output_columns
+        ]
+        .sort_values(
+            "licence_start_date",
+            ascending=False,
+        )
+        .head(50)
+        .to_string(index=False)
+    )
+
+
+if __name__ == "__main__":
+    main()
+

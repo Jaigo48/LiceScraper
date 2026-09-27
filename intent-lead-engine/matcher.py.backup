@@ -1,0 +1,37 @@
+#!/usr/bin/env python3
+
+"""
+Conservative matching between restaurant information and
+Finnish alcohol licence locations.
+"""
+
+from __future__ import annotations
+
+from typing import Optional
+
+import pandas as pd
+
+
+def match_location(
+    df: pd.DataFrame,
+    street_address: Optional[str] = None,
+    postal_code: Optional[str] = None,
+    municipality: Optional[str] = None,
+) -> pd.DataFrame:
+    """Return licence records matching a supplied physical location."""
+
+    if not street_address or not postal_code or not municipality:
+        return df.iloc[0:0].copy()
+
+    street = str(street_address).strip().upper()
+    postal = str(postal_code).strip().upper()
+    city = str(municipality).strip().upper()
+
+    matches = (
+        (df["street_address"] == street)
+        & (df["postal_code"].astype(str) == postal)
+        & (df["municipality"] == city)
+    )
+
+    return df.loc[matches].copy()
+

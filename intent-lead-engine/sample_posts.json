@@ -1,0 +1,53 @@
+[
+  {
+    "post_id": "restaurant-001",
+    "source": "sample_operator_forum",
+    "author": "Jamie",
+    "title": "Thinking about switching POS after another outage",
+    "body": "We run a small neighborhood restaurant and our current POS keeps freezing during busy dinner service. Last Friday the terminals went down for almost an hour. I'm starting to look at other POS systems because the reliability has become a real problem. Has anyone switched recently and had a smoother experience?",
+    "url": "https://example.com/community/post/restaurant-001",
+    "street_address": "Merisatamaranta 10",
+    "postal_code": "150",
+    "municipality": "Helsinki"
+  },
+  {
+    "post_id": "restaurant-002",
+    "source": "sample_operator_forum",
+    "author": "Morgan",
+    "title": "Credit card processing fees getting painful",
+    "body": "Has anyone found a way to lower credit card processing fees? Our volume has increased but the payment processing costs are eating into margins. I like most of our current POS setup, so I'm mainly researching pricing and payment alternatives right now.",
+    "url": "https://example.com/community/post/restaurant-002"
+  },
+  {
+    "post_id": "restaurant-003",
+    "source": "sample_operator_forum",
+    "author": "Taylor",
+    "title": "POS recommendations for a new cafe",
+    "body": "We're opening a cafe later this year and I'm collecting recommendations for POS systems. What are people using for a small counter-service operation? Mainly interested in hearing what has worked well for other owners.",
+    "url": "https://example.com/community/post/restaurant-003"
+  },
+  {
+    "post_id": "restaurant-004",
+    "source": "sample_operator_forum",
+    "author": "Alex",
+    "title": "Our POS terminal is incredibly slow",
+    "body": "Does anyone else have painfully slow POS hardware? Our terminals take several seconds to respond to simple orders and staff are getting frustrated during rushes. Support hasn't been very helpful either. I'm not sure we're ready to replace the whole system, but I'm researching alternatives.",
+    "url": "https://example.com/community/post/restaurant-004"
+  },
+  {
+    "post_id": "restaurant-005",
+    "source": "sample_operator_forum",
+    "author": "Casey",
+    "title": "What POS do you use?",
+    "body": "Just curious what POS systems everyone is using these days. We have been using ours for years and haven't had any major issues. Looking to learn what else is out there.",
+    "url": "https://example.com/community/post/restaurant-005"
+  },
+  {
+    "post_id": "restaurant-006",
+    "source": "sample_operator_forum",
+    "author": "Riley",
+    "title": "Leaving our current POS",
+    "body": "After months of crashes, limited reporting, and poor customer support, we've decided to leave our current POS. I'm comparing replacement systems now and would especially like something reliable with better reporting and faster hardware.",
+    "url": "https://example.com/community/post/restaurant-006"
+  }
+]
