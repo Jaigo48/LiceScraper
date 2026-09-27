@@ -3,7 +3,6 @@ from pathlib import Path
 import tempfile
 import os
 
-from main import run_pipeline, save_csv
 from finland.importer import (
     load_finland_licences,
     add_location_key,
@@ -11,8 +10,6 @@ from finland.importer import (
 )
 
 app = Flask(__name__)
-
-ALLOWED_EXTENSIONS = {".csv", ".xlsx", ".json"}
 
 
 @app.route("/")
@@ -27,7 +24,6 @@ def index():
       <style>
         body { font-family: sans-serif; max-width: 600px; margin: 40px auto; padding: 0 20px; }
         h1 { font-size: 1.5rem; }
-        h2 { font-size: 1.1rem; margin-top: 30px; }
         button { padding: 10px 20px; cursor: pointer; margin: 5px 0; font-size: 1rem; }
         input[type="file"] { margin: 10px 0; }
         .section { border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-top: 20px; }
@@ -37,20 +33,22 @@ def index():
       <h1>Lead Enrichment Tool</h1>
 
       <div class="section">
-        <h2>Hot Leads — Upcoming Openings</h2>
+        <h2>Get Hot Leads</h2>
         <p>New Finnish locations that haven't opened yet. Actively choosing a POS system now.</p>
+        <p>Data as of 27.9.2026.</p>
         <form method="POST" action="/hot-leads">
           <button type="submit">Get Hot Leads</button>
         </form>
+        <p>Source: <a href="https://avoindata.suomi.fi/data/fi/dataset/alkoholielinkeinorekisteri" target="_blank">Finnish Open Data Portal — Alcohol Licence Register (LVV)</a></p>
       </div>
 
       <div class="section">
-        <h2>Upload &amp; Process Your Leads</h2>
-        <p>Upload a CSV, XLSX, or JSON file with your leads for enrichment and licence matching.</p>
-        <form method="POST" enctype="multipart/form-data" action="/process">
-          <input type="file" name="file" accept=".csv,.xlsx,.json" required>
+        <h2>Import Updated Data</h2>
+        <p>The LVV register is updated periodically by the government. If a newer version has been published, download it from the <a href="https://avoindata.suomi.fi/data/fi/dataset/alkoholielinkeinorekisteri" target="_blank">source</a> and upload it here to get the latest hot leads.</p>
+        <form method="POST" enctype="multipart/form-data" action="/import-data">
+          <input type="file" name="file" accept=".xlsx" required>
           <br>
-          <button type="submit">Process</button>
+          <button type="submit">Import &amp; Get Hot Leads</button>
         </form>
       </div>
 
@@ -66,43 +64,49 @@ def hot_leads():
     result = detect_new_locations(df)
     result = result[result["signal_type"] == "NEW_LOCATION_UPCOMING"]
 
-    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".csv")
+    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx")
     tmp.close()
-    result.to_csv(tmp.name, index=False)
+    result.to_excel(tmp.name, index=False)
 
     return send_file(
         tmp.name,
         as_attachment=True,
-        download_name="hot_leads.csv",
-        mimetype="text/csv",
+        download_name="hot_leads.xlsx",
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
 
 
-@app.route("/process", methods=["POST"])
-def process():
+@app.route("/import-data", methods=["POST"])
+def import_data():
     f = request.files.get("file")
     if not f or f.filename == "":
         return "No file uploaded.", 400
 
-    ext = Path(f.filename).suffix.lower()
-    if ext not in ALLOWED_EXTENSIONS:
-        return f"Unsupported file type: {ext}. Use .csv, .xlsx, or .json.", 400
+    if not f.filename.lower().endswith(".xlsx"):
+        return "Please upload the .xlsx file from the LVV source.", 400
 
-    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=ext)
+    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx")
     tmp.write(f.read())
     tmp.close()
 
     try:
-        leads = run_pipeline("mock", tmp.name)
-        csv_path = save_csv(leads)
+        df = load_finland_licences(Path(tmp.name))
+        df = add_location_key(df)
+        result = detect_new_locations(df)
+        result = result[result["signal_type"] == "NEW_LOCATION_UPCOMING"]
+
+        out = tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx")
+        out.close()
+        result.to_excel(out.name, index=False)
+
         return send_file(
-            str(csv_path),
+            out.name,
             as_attachment=True,
-            download_name="enriched_leads.csv",
-            mimetype="text/csv",
+            download_name="hot_leads_updated.xlsx",
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
     except Exception as e:
-        return f"Processing error: {str(e)}", 500
+        return f"Import error: {str(e)}", 500
     finally:
         os.unlink(tmp.name)
 
