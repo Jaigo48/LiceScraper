@@ -18,8 +18,7 @@ import pandas as pd
 
 
 DEFAULT_FILE = (
-    Path.home()
-    / "Downloads"
+    Path(__file__).resolve().parent
     / "luparekisteri-voimassaolevat-alkoholiluvat.xlsx"
 )
 
