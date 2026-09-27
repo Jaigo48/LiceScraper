@@ -1,0 +1,48 @@
+[
+  {
+    "post_id": "lead-001",
+    "source": "custom_csv",
+    "author": "helsinki_cafe_owner",
+    "title": "Switching our POS system ahead of spring",
+    "url": "https://example.com/1",
+    "ingestion_mode": "local",
+    "intent": "Medium",
+    "confidence": 0.72,
+    "pain_points": [
+      "High payment or credit-card processing costs",
+      "POS crashes, freezing, or downtime"
+    ],
+    "outreach_email": "Hi helsinki_cafe_owner, I came across your post about high payment or credit-card processing costs. We work with restaurant operators looking to reduce payment and POS costs without adding unnecessary complexity. If you're still evaluating options, would you be open to a quick conversation about what you're looking to improve?",
+    "enrichment_mode": "mock",
+    "street_address": "Aleksanterinkatu 10",
+    "postal_code": "100",
+    "municipality": "Helsinki",
+    "finland_licence_match": false,
+    "finland_licence_count": 0,
+    "finland_licences": [],
+    "finland_signal_type": null
+  },
+  {
+    "post_id": "lead-002",
+    "source": "custom_xlsx",
+    "author": "espoo_restaurateur",
+    "title": "Looking for better POS reporting options",
+    "url": "https://example.com/2",
+    "ingestion_mode": "local",
+    "intent": "Medium",
+    "confidence": 0.78,
+    "pain_points": [
+      "High payment or credit-card processing costs",
+      "Limited or unreliable reporting"
+    ],
+    "outreach_email": "Hi espoo_restaurateur, I came across your post about high payment or credit-card processing costs. We work with restaurant operators looking to reduce payment and POS costs without adding unnecessary complexity. If you're still evaluating options, would you be open to a quick conversation about what you're looking to improve?",
+    "enrichment_mode": "mock",
+    "street_address": "Itätuulenkuja 1",
+    "postal_code": "2100",
+    "municipality": "Espoo",
+    "finland_licence_match": false,
+    "finland_licence_count": 0,
+    "finland_licences": [],
+    "finland_signal_type": null
+  }
+]
